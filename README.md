@@ -9,6 +9,7 @@
   <p>
     <a href="https://chromewebstore.google.com/detail/openfocusd/cimnmoclhghnbpamdblmakjfmbhmacpa">Download for Chrome/Brave</a> ·
     <a href="https://zshanhui.github.io/openfocusd">Website</a> ·
+    <a href="https://github.com/zshanhui/openfocusd/blob/main/comparisons.md">Comparison</a>
   </p>
 </div>
 
