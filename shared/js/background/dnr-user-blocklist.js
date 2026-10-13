@@ -5,6 +5,7 @@ import { getCurrentlyBlockedDomains, normalizeGroups } from '../shared-utils/sit
 import settings from './settings';
 import { USER_BLOCKED_SITES_RULE_ID, USER_BLOCKED_SITES_SUBRESOURCE_RULE_ID } from './dnr-utils';
 import { getManifestVersion } from './wrapper';
+import { setBlockedDomains } from './focus-block-policy';
 
 const BLOCKED_SITE_PAGE_PATH = '/html/blocked.html';
 const MAIN_FRAME_RESOURCE_TYPE = 'main_frame';
@@ -51,6 +52,13 @@ export async function getBlockedSites() {
  */
 export async function refreshUserBlockedSitesRules(domains) {
     const normalizedDomains = normalizeDomains(domains);
+    // Firefox blocks these domains in the webRequest listener. Keep Chrome on
+    // declarativeNetRequest.
+    if (getManifestVersion() === 2) {
+        setBlockedDomains(normalizedDomains);
+        return normalizedDomains;
+    }
+
     const addRules = [];
 
     if (normalizedDomains.length > 0) {

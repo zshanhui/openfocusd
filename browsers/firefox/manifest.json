@@ -3,7 +3,7 @@
     "applications": {
         "gecko": {
             "id": "jid1-ZAdIEUB7XOzOJw@jetpack",
-            "strict_min_version": "102.0"
+            "strict_min_version": "128.0"
         }
     },
     "homepage_url": "https://zshanhui.github.io/openfocusd/",
@@ -74,6 +74,7 @@
     ],
     "web_accessible_resources": [
         "/web_accessible_resources/*",
-        "/public/font/*"
+        "/public/font/*",
+        "/html/blocked.html"
     ]
 }

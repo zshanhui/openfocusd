@@ -128,6 +128,11 @@ function convertScriptingAPIOptionsForTabsAPI(options) {
         delete options.files;
     }
 
+    if (typeof options.css === 'string') {
+        options.code = options.css;
+        delete options.css;
+    }
+
     if (typeof allFrames !== 'undefined') {
         options.allFrames = allFrames;
     }
@@ -203,6 +208,24 @@ export async function insertCSS(options) {
     }
 
     return await browser.scripting.insertCSS(options);
+}
+
+/**
+ * Remove CSS previously inserted in the target tab.
+ * This is a wrapper around tabs.removeCSS (MV2) and scripting.removeCSS (MV3).
+ * Arguments are expected in the scripting.removeCSS format, including a `css` string.
+ * @param {object} options
+ *   CSS removal options.
+ */
+export async function removeCSS(options) {
+    if (typeof browser.scripting === 'undefined') {
+        return await browser.tabs.removeCSS(
+            // @ts-ignore
+            ...convertScriptingAPIOptionsForTabsAPI(options),
+        );
+    }
+
+    return await browser.scripting.removeCSS(options);
 }
 
 // Session storage

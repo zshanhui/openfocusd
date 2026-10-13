@@ -1,4 +1,3 @@
-/* global BUILD_TARGET */
 const Parent = window.DDG.base.Page;
 const mixins = require('./mixins/index.js');
 const PrivacyOptionsView = require('./../views/privacy-options.js');
@@ -66,21 +65,19 @@ Options.prototype = window.$.extend({}, Parent.prototype, mixins.setBrowserClass
             template: allowlistTemplate,
         });
 
-        if (BUILD_TARGET === 'chrome') {
-            this.views.siteGroups = new SiteGroupsView({
-                pageView: this,
-                model: new SiteGroupsModel({}),
-                appendTo: $siteGroupsParent,
-                template: siteGroupsTemplate,
-            });
+        this.views.siteGroups = new SiteGroupsView({
+            pageView: this,
+            model: new SiteGroupsModel({}),
+            appendTo: $siteGroupsParent,
+            template: siteGroupsTemplate,
+        });
 
-            this.views.allowedSites = new AllowedSitesView({
-                pageView: this,
-                model: new AllowedSitesModel({}),
-                appendTo: $allowedSitesParent,
-                template: allowedSitesTemplate,
-            });
-        }
+        this.views.allowedSites = new AllowedSitesView({
+            pageView: this,
+            model: new AllowedSitesModel({}),
+            appendTo: $allowedSitesParent,
+            template: allowedSitesTemplate,
+        });
 
         this.views.sanitizeYoutube = new SanitizeYoutubeView({
             pageView: this,

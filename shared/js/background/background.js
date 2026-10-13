@@ -38,6 +38,7 @@ import MessageRouter from './components/message-router';
 import RequestBlocklist from './components/request-blocklist';
 import { CPMStandaloneMessaging } from './components/cpm-standalone-messaging';
 import CookiePromptManagement from './components/cookie-prompt-management';
+import { installFocusBlockListener } from './focus-block-policy';
 
 // Trigger registration of default message handlers into the shared registry.
 import { registerStandardHandlers } from './message-handlers';
@@ -85,35 +86,39 @@ const components = {
 };
 
 if (BUILD_TARGET === 'chrome') {
-    // MV3-only components
+    // Firefox declares its content scripts in the manifest.
     components.scriptInjection = new MV3ContentScriptInjection();
-    try {
-        components.siteGroups = new SiteGroups({ settings });
-    } catch (error) {
-        console.error('Failed to start site groups', error);
-    }
-    try {
-        components.allowedSites = new AllowedSites({ settings });
-    } catch (error) {
-        console.error('Failed to start allowed sites', error);
-    }
-    try {
-        components.sanctuary = new Sanctuary({ settings });
-    } catch (error) {
-        console.error('Failed to start sanctuary', error);
-    }
-    try {
-        components.sanitizeYoutube = new SanitizeYoutube({ settings });
-    } catch (error) {
-        console.error('Failed to start sanitize youtube', error);
-    }
+}
+
+try {
+    components.siteGroups = new SiteGroups({ settings });
+} catch (error) {
+    console.error('Failed to start site groups', error);
+}
+try {
+    components.allowedSites = new AllowedSites({ settings });
+} catch (error) {
+    console.error('Failed to start allowed sites', error);
+}
+try {
+    components.sanctuary = new Sanctuary({ settings });
+} catch (error) {
+    console.error('Failed to start sanctuary', error);
+}
+try {
+    components.sanitizeYoutube = new SanitizeYoutube({ settings });
+} catch (error) {
+    console.error('Failed to start sanitize youtube', error);
+}
+
+if (BUILD_TARGET === 'chrome') {
     components.dnrListeners = new DNRListeners({ settings, tds });
 
     const cpmMessaging = new CPMStandaloneMessaging({ remoteConfig });
     components.cpm = new CookiePromptManagement({ cpmMessaging });
 } else {
-    // MV2-only components
     components.requestBlocklist = new RequestBlocklist();
+    installFocusBlockListener();
 }
 console.log(new Date(), 'Loaded components:', components);
 // @ts-ignore

@@ -2,6 +2,7 @@ import browser from 'webextension-polyfill';
 import { registerMessageHandler } from '../message-registry';
 import { refreshUserBlockedSitesRules } from '../dnr-user-blocklist';
 import {
+    refreshAdultGamblingEnforcement,
     refreshCategoryAllowRules,
     isAdultGamblingBlockEnabled,
     setAdultGamblingBlockEnabled,
@@ -101,6 +102,9 @@ export default class SiteGroups {
             await this.settings.ready();
             await ensureSiteGroups();
             await this.syncBlockedRules();
+            if (getManifestVersion() === 2) {
+                await refreshAdultGamblingEnforcement();
+            }
             await this.scheduleDailyReset();
 
             browser.tabs.onActivated.addListener(() => this.queueSync());
@@ -364,9 +368,10 @@ export default class SiteGroups {
     }
 
     async isPopupOpen() {
-        const runtime = /** @type {typeof browser.runtime & { getContexts?: (query: { contextTypes: string[] }) => Promise<unknown[]> }} */ (
-            browser.runtime
-        );
+        const runtime =
+            /** @type {typeof browser.runtime & { getContexts?: (query: { contextTypes: string[] }) => Promise<unknown[]> }} */ (
+                browser.runtime
+            );
         if (typeof runtime.getContexts !== 'function') {
             return false;
         }
@@ -444,7 +449,7 @@ export default class SiteGroups {
                 usageDays: getUsageDays({ id: 'allowed' }, { allowed: getAllowedSiteUsage() }, now, TIME_ANALYTICS_RANGE_DAYS),
             },
             resetHour: 6,
-            categoryBlockSupported: getManifestVersion() === 3,
+            categoryBlockSupported: getManifestVersion() === 2 || getManifestVersion() === 3,
             blockAdultGamblingSites: isAdultGamblingBlockEnabled(),
         };
     }

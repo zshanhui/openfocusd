@@ -1,4 +1,5 @@
 import browser from 'webextension-polyfill';
+import { insertCSS, removeCSS } from '../wrapper';
 
 const COMMENT_SECTIONS = [
     'ytd-comments',
@@ -180,7 +181,7 @@ export default class SanitizeYoutube {
 
     async insert(tabId, css) {
         try {
-            await browser.scripting.insertCSS({ target: { tabId }, css });
+            await insertCSS({ target: { tabId }, css });
         } catch (e) {}
     }
 
@@ -189,7 +190,7 @@ export default class SanitizeYoutube {
         await Promise.all(
             styles.map(async (css) => {
                 try {
-                    await browser.scripting.removeCSS({ target: { tabId }, css });
+                    await removeCSS({ target: { tabId }, css });
                 } catch (e) {}
             }),
         );
