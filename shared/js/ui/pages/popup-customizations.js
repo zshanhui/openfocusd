@@ -89,11 +89,13 @@ function refreshSearchEngine(page, search) {
         searchEngineRequest = sendExtensionMessage({
             messageType: 'getSetting',
             options: { name: 'searchEngine' },
-        }).then((value) => {
-            searchEngine = normalizeSearchEngine(value);
-        }).catch(() => {
-            searchEngine = SEARCH_ENGINE_DDG;
-        });
+        })
+            .then((value) => {
+                searchEngine = normalizeSearchEngine(value);
+            })
+            .catch(() => {
+                searchEngine = SEARCH_ENGINE_DDG;
+            });
     }
 
     return searchEngineRequest.then(() => applySearchEngine(page, search));

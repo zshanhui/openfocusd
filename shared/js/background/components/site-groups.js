@@ -15,6 +15,7 @@ import {
     ALARM_EXPIRY,
     applyAllowedElapsed,
     applyElapsed,
+    clampTickElapsed,
     findGroupForHostname,
     formatAllowance,
     getCurrentlyBlockedDomains,
@@ -247,8 +248,10 @@ export default class SiteGroups {
             return { expired: false, group: null };
         }
 
+        // Cap one tick so overnight sleep cannot exhaust a group or inflate analytics.
+        const elapsedSeconds = clampTickElapsed((now - this.lastTickAt) / 1000);
+
         if (!this.activeGroupId) {
-            const elapsedSeconds = Math.max(0, (now - this.lastTickAt) / 1000);
             saveAllowedSiteUsage(applyAllowedElapsed(getAllowedSiteUsage(), elapsedSeconds, now, this.activeAllowedPattern));
             this.lastTickAt = now;
             return { expired: false, group: null };
@@ -264,7 +267,6 @@ export default class SiteGroups {
             return { expired: false, group: null };
         }
 
-        const elapsedSeconds = Math.max(0, (now - this.lastTickAt) / 1000);
         const applied = applyElapsed(group, getGroupUsage(), elapsedSeconds, now, this.activeHostname);
         saveGroupUsage(applied.usage);
         this.lastTickAt = now;
@@ -533,6 +535,7 @@ export default class SiteGroups {
             return locked;
         }
         if (this.activeGroupId === id) {
+            await this.persistElapsed(Date.now());
             this.activeGroupId = null;
             this.activeAllowedPattern = null;
             this.activeHostname = null;

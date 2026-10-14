@@ -8,7 +8,7 @@
     },
     "homepage_url": "https://zshanhui.github.io/openfocusd/",
     "default_locale": "en",
-    "version": "2026.10.10",
+    "version": "2026.10.15",
     "description": "Privacy, simplified. Protect your data as you search and browse: tracker blocking, smarter encryption, private search, and more.",
     "icons": {
         "16": "img/icon_16.png",
@@ -55,6 +55,22 @@
             "world": "MAIN",
             "js": [
                 "public/js/inject.js"
+            ],
+            "run_at": "document_start"
+        },
+        {
+            "matches": [
+                "*://*.youtube.com/*",
+                "*://youtube.com/*"
+            ],
+            "js": [
+                "public/js/content-scripts/youtube-sanitize.js"
+            ],
+            "css": [
+                "data/youtube-sanitize/comments.css",
+                "data/youtube-sanitize/related.css",
+                "data/youtube-sanitize/shorts.css",
+                "data/youtube-sanitize/thumbnails.css"
             ],
             "run_at": "document_start"
         }

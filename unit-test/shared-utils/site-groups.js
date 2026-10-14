@@ -15,7 +15,9 @@ import {
     getPeriodKey,
     getRemainingSeconds,
     applyAllowedElapsed,
+    clampTickElapsed,
     getUsageDays,
+    MAX_TICK_ELAPSED_SECONDS,
     rollAllowedSiteUsage,
     rollUsageToPeriod,
     hostnameFromUrl,
@@ -208,6 +210,13 @@ describe('site groups helpers', () => {
                 isToday: true,
             }),
         );
+    });
+
+    it('clamps one timer tick so overnight sleep cannot exhaust a daily budget', () => {
+        expect(clampTickElapsed(9 * 3600)).toBe(MAX_TICK_ELAPSED_SECONDS);
+        expect(clampTickElapsed(30)).toBe(30);
+        expect(clampTickElapsed(-5)).toBe(0);
+        expect(clampTickElapsed(Number.NaN)).toBe(0);
     });
 
     it('records Allowed Sites time without a daily cap and keeps the previous day', () => {

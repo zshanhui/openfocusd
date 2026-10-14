@@ -14,6 +14,11 @@ export const MAX_GROUP_NAME_LENGTH = 60;
 export const ALARM_DAILY_RESET = 'site-groups-daily-reset';
 export const ALARM_EXPIRY = 'site-groups-expiry';
 export const ALARM_CHECKPOINT = 'site-groups-checkpoint';
+/**
+ * Cap for one timer tick. The checkpoint alarm runs every minute; allowing about
+ * two minutes covers a late alarm without counting laptop-sleep hours as focus time.
+ */
+export const MAX_TICK_ELAPSED_SECONDS = 120;
 
 /**
  * @typedef {object} SiteGroup
@@ -473,6 +478,17 @@ export function rollUsageToPeriod(usage, now = Date.now()) {
         };
     }
     return next;
+}
+
+/**
+ * Drop overnight or idle gaps so a closed laptop cannot exhaust a group or inflate analytics.
+ *
+ * @param {number} elapsedSeconds
+ * @returns {number}
+ */
+export function clampTickElapsed(elapsedSeconds) {
+    const elapsed = Number.isFinite(elapsedSeconds) && elapsedSeconds > 0 ? elapsedSeconds : 0;
+    return Math.min(elapsed, MAX_TICK_ELAPSED_SECONDS);
 }
 
 /**

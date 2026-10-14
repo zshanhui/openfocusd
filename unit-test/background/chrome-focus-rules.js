@@ -11,7 +11,7 @@ describe('Chrome focus enforcement stays on declarativeNetRequest', () => {
     beforeEach(() => {
         resetFocusBlockPolicy();
         spyOn(browser.runtime, 'getManifest').and.returnValue({
-            version: '2026.10.10',
+            version: '2026.10.15',
             manifest_version: 3,
         });
         updateDynamicRules = spyOn(chrome.declarativeNetRequest, 'updateDynamicRules').and.resolveTo();

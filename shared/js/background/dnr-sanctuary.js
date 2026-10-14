@@ -9,6 +9,7 @@ import {
 } from './dnr-utils';
 import { getManifestVersion } from './wrapper';
 import { setSanctuaryPolicy } from './focus-block-policy';
+import { getSanctuarySettings } from './sanctuary-store';
 
 const BLOCKED_SITE_PAGE_PATH = '/html/blocked.html';
 const MAIN_FRAME_RESOURCE_TYPE = 'main_frame';
@@ -106,7 +107,8 @@ export async function refreshSanctuaryRules(patterns) {
     // Firefox enforces sanctuary in the webRequest listener. Keep Chrome on
     // declarativeNetRequest.
     if (getManifestVersion() === 2) {
-        setSanctuaryPolicy(true, patterns);
+        const { endsAt } = getSanctuarySettings();
+        setSanctuaryPolicy(true, patterns, endsAt);
         return patterns;
     }
 

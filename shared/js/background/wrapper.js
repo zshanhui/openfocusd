@@ -207,7 +207,10 @@ export async function insertCSS(options) {
         );
     }
 
-    return await browser.scripting.insertCSS(options);
+    // scripting.insertCSS has no injectImmediately; that flag only maps to
+    // tabs.insertCSS runAt on Manifest V2.
+    const { injectImmediately: _injectImmediately, ...scriptingOptions } = options;
+    return await browser.scripting.insertCSS(scriptingOptions);
 }
 
 /**

@@ -46,6 +46,17 @@ TimeAnalytics.prototype = window.$.extend({}, Parent.prototype, {
         this.setup();
     },
 
+    _filterOpen: function () {
+        const active = document.activeElement;
+        if (!active || !this.$el) {
+            return false;
+        }
+        return Boolean(
+            (this.$filter && this.$filter[0] && (active === this.$filter[0] || this.$filter[0].contains(active))) ||
+                (this.$range && this.$range[0] && (active === this.$range[0] || this.$range[0].contains(active))),
+        );
+    },
+
     _refresh: function () {
         if (this._refreshing) {
             return;
@@ -54,7 +65,8 @@ TimeAnalytics.prototype = window.$.extend({}, Parent.prototype, {
         this.model
             .getState()
             .then(() => {
-                if (this.$el) {
+                // Keep an open Today/Week or Blocked/Allowed select from closing on the 5s poll.
+                if (this.$el && !this._filterOpen()) {
                     this.unbindEvents();
                     this._rerender();
                     this.setup();
