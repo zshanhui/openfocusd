@@ -4,8 +4,9 @@ For OpenFocusd. Each justification is tied to real, verifiable code paths in thi
 (search the cited files to confirm). Copy-paste into the matching field on the
 **Privacy practices** tab of the item edit page.
 
-> Updated for the permission set in `browsers/chrome/manifest.json` after removing the unused
-> `activeTab` and `declarativeNetRequestFeedback` permissions (see note at the end).
+> Updated for `browsers/chrome/manifest.json` version `2026.10.15`. That manifest adds the
+> `favicon` permission for Time analytics icons. `activeTab` and `declarativeNetRequestFeedback`
+> stay removed (see note at the end).
 
 ---
 
@@ -55,6 +56,16 @@ declarative rules:
 
 Rule matching happens locally in the browser; no request data leaves the device.
 
+### favicon
+**Used for:** site icons on the Time analytics tab only.
+
+The options page shows a 16px icon beside each host in Time analytics. The icon is loaded from
+Chrome's favicon cache through the extension URL `/_favicon/?pageUrl=…&size=32`. See
+`faviconURL` in `shared/js/ui/templates/time-analytics.js`. The page address is handed to Chrome
+so it can look up an icon it already has. It is not sent to OpenFocusd, and the extension does
+not call a third-party favicon host. Firefox builds omit the icon because `/_favicon/` is
+Chrome-only.
+
 ### host permission use (`*://*/*`)
 **Used for:** applying user-configured blocking to *any* domain the user chooses.
 
@@ -63,8 +74,9 @@ rules cannot be limited to a fixed host list — a dynamic rule/`<all_urls>` mat
 that whatever site the user adds to a group is blocked, and so the extension can read the URL of
 the current page to show correct group/timer status and the blocking page. The same broad match
 covers the registered content scripts (below) and the `webRequest`/`webNavigation` observers.
-URLs are processed locally to decide blocking; they are never transmitted. No history or page
-content is read or sent.
+URLs are processed locally to decide blocking and to add up time. Page content is not read.
+For sites the user puts in a group or in Allowed Sites, the hostname and the seconds spent that
+day are stored on the device for the timer and Time analytics. Nothing is transmitted.
 
 ### remote code use
 **No remote code is executed.** All JavaScript is bundled into the extension and shipped inside
@@ -84,20 +96,31 @@ At startup the background script registers two content scripts that run on page 
 (`shared/js/background/components/mv3-content-script-injection.js`): a small isolated-world
 messaging helper and the bundled protection script (`public/js/inject.js`), injected at
 `document_start` in all frames, which applies the extension's on-page privacy protections
-(tracker/cookie protection) under the remote configuration. `chrome.scripting.executeScript` is
-also used for user-triggered cookie-banner actions (`shared/js/background/components/
-cookie-prompt-management.js`). Scripts are first-party, bundled, and versioned with the
-extension.
+(tracker/cookie protection) under the remote configuration. The same API registers the YouTube
+sanitizer: four bundled CSS files plus a small class-toggle script, matched only to YouTube,
+also at `document_start` (`shared/js/background/components/sanitize-youtube.js`). Those styles
+hide comments, recommendations, and Shorts, and blur thumbnails, when the user turns the
+matching setting on. `chrome.scripting.executeScript` is also used for user-triggered
+cookie-banner actions (`shared/js/background/components/cookie-prompt-management.js`) and to
+apply the YouTube classes on tabs that are already open. Scripts and CSS are first-party,
+bundled, and versioned with the extension. They do not skip video ads.
 
 ### storage
 **Used for:** persisting the product's local state.
 
-`chrome.storage.local` stores the user's own data — site groups and allowed-site lists, daily
-time usage, settings (language, optional privacy toggles) — plus cached downloaded rulesets.
+`chrome.storage.local` stores the user's own data: site groups, Allowed Sites, settings
+(language, optional privacy toggles, YouTube sanitizer switches), and time records. Time
+records are `groupUsage` and `allowedSiteUsage` (`shared/js/background/site-groups-store.js`,
+`shared/js/background/allowed-sites-store.js`). Each finished day keeps the hostname and the
+seconds spent. `USAGE_HISTORY_DAYS` in `shared/js/shared-utils/site-groups.js` is 30: older
+days are deleted when the focus day rolls. The options page shows today and the last 7 days
+of that store. Deleting a site group deletes that group's record immediately. Removing one
+site, or clearing Allowed Sites, leaves that host's past time until the 30-day window drops
+it or the group is deleted. Uninstalling the extension deletes the local store.
 `chrome.storage.session` holds ephemeral state that should not survive a worker restart. See
-`shared/js/background/settings.js`, `shared/js/background/wrapper.js`. Everything is stored on
-the user's device under the extension's own namespace; there is no cloud sync and nothing is
-transmitted.
+`shared/js/background/settings.js` and `shared/js/background/wrapper.js`. There is no
+`storage.sync` and nothing is uploaded. Cached tracker and HTTPS rulesets are also kept
+locally.
 
 ### tabs
 **Used for:** knowing which site is active so the extension can show the right state and act
@@ -106,8 +129,8 @@ only where the user is looking.
 The extension tracks open tabs (URL/state) to (a) update the toolbar icon and popup with the
 correct group/timer status for the current site, (b) answer popup queries about the active tab,
 and (c) keep per-tab state in sync as pages load. See `shared/js/background/tab-manager.js` and
-`shared/js/background/components/tab-tracking.js`. Tab URLs are used only to decide local
-blocking/status; they are never sent anywhere.
+`shared/js/background/components/tab-tracking.js`. Tab URLs are used locally to decide
+blocking, to show status, and to count time for the active site. They are never sent anywhere.
 
 ### webNavigation
 **Used for:** reacting to navigations, which is how blocking is made visible and time is counted.
@@ -139,7 +162,9 @@ tracker using the bundled rulesets; nothing is transmitted.
 > distracting websites on a daily timer: sites are organised into user-defined groups with a
 > shared daily allowance, an "Always Block" group for sites the user never wants to visit again,
 > "Allowed Sites" that stay reachable even inside blocked groups, and Sanctuary Mode that locks
-> the browser to only Allowed Sites for a chosen period. The optional privacy protections
+> the browser to only Allowed Sites for a chosen period. Time analytics shows that same on-device
+> time for today and the last 7 days. The optional YouTube sanitizer hides comments,
+> recommendations, and Shorts and blurs thumbnails on YouTube. The optional privacy protections
 > (tracker blocking, Global Privacy Control, HTTPS upgrading) are supporting features of the same
 > product and are controlled from the same settings; they exist to make focused browsing safer
 > and do not constitute a separate purpose.
@@ -149,24 +174,33 @@ tracker using the bundled rulesets; nothing is transmitted.
 ## Data usage / Developer Program Policies certification
 
 Recommended answers for the Privacy practices questionnaire (answer carefully against the exact
-questions shown; the [privacy policy](https://zshanhui.github.io/openfocusd/#privacy) supports
-these statements):
+questions shown). The published [privacy policy](https://zshanhui.github.io/openfocusd/#privacy)
+still needs a sentence for the 30-day per-site history before you certify; `website/copy.yaml`
+currently lists daily time used and was last updated 23 August 2026.
 
-- **Collection/transmission:** OpenFocusd does not collect or sell personal data. It has no
-  servers, no accounts, no analytics, and no advertising.
-- **What is stored on the device:** the user's own site lists, groups, daily time usage, and
-  settings, kept in `chrome.storage.local`. Chrome treats this local browsing-related data as
-  user data for the purposes of the questionnaire, even though it never leaves the device.
+- **Collection/transmission:** OpenFocusd does not sell personal data and does not upload
+  browsing history. It has no servers, no accounts, no remote analytics backend, and no
+  advertising. Leave the "does not collect user data" certification unchecked. Local site
+  lists and time records are user data under the questionnaire.
+- **What is stored on the device:** site lists, groups, settings, and time records in
+  `chrome.storage.local`. For sites in a group or in Allowed Sites, each day stores the
+  hostname and the seconds spent. Daily records are kept for 30 days, then older days are
+  deleted. The options page shows today and the last 7 days. Deleting a site group deletes
+  that group's record immediately. Removing one site, or clearing Allowed Sites, leaves that
+  host's past time until the 30-day window drops it or the group is deleted. Uninstalling
+  the extension deletes the local store. The `favicon` permission only reads Chrome's icon
+  cache for those hosts. The page address is not sent to OpenFocusd.
 - **Third-party data flows to disclose (matching the policy):**
   - Optional HTTPS upgrading may send a short hash of a hostname to `duckduckgo.com` to learn
     whether the site supports HTTPS.
   - Optional tracker protection downloads public rulesets/config from `staticcdn.duckduckgo.com`.
   - If the user runs a search from the popup, the query goes to the search engine the user chose
     (DuckDuckGo or Brave Search).
-  - None of these include the user's site lists, timers, or history, and none are received by
-    OpenFocusd.
+  - None of these include the user's site lists, timers, or time records, and none are
+    received by OpenFocusd.
 - **Limited Use:** the extension complies with the Chrome Web Store Limited Use requirements;
-  any data handled is used only to provide the stated blocking/timer features.
+  any data handled is used only to provide the stated blocking, timer, and on-device Time
+  analytics features.
 
 ---
 

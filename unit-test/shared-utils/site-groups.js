@@ -175,6 +175,8 @@ describe('site groups helpers', () => {
                 usedSeconds: 100,
                 domains: { 'youtube.com': 80, 'reddit.com': 20 },
                 history: {
+                    '2026-07-16': { usedSeconds: 12, domains: { 'youtube.com': 12 } },
+                    '2026-07-15': { usedSeconds: 8, domains: { 'youtube.com': 8 } },
                     '2026-05-01': { usedSeconds: 9, domains: { 'youtube.com': 9 } },
                 },
             },
@@ -184,6 +186,8 @@ describe('site groups helpers', () => {
         expect(rolled[DEFAULT_GROUP_ID].periodKey).toBe('2026-08-14');
         expect(rolled[DEFAULT_GROUP_ID].usedSeconds).toBe(0);
         expect(rolled[DEFAULT_GROUP_ID].history['2026-08-13'].usedSeconds).toBe(100);
+        expect(rolled[DEFAULT_GROUP_ID].history['2026-07-16'].usedSeconds).toBe(12);
+        expect(rolled[DEFAULT_GROUP_ID].history['2026-07-15']).toBeUndefined();
         expect(rolled[DEFAULT_GROUP_ID].history['2026-05-01']).toBeUndefined();
 
         const continued = {

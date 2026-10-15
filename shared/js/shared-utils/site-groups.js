@@ -2,7 +2,7 @@ import { normalizeBlockedSite } from './blocked-sites';
 
 export const RESET_HOUR = 6;
 /** Focus days kept on disk, including today. The analytics view shows a shorter window. */
-export const USAGE_HISTORY_DAYS = 90;
+export const USAGE_HISTORY_DAYS = 30;
 export const TIME_ANALYTICS_RANGE_DAYS = 7;
 export const DEFAULT_GROUP_ID = 'default';
 export const ALWAYS_BLOCK_GROUP_ID = 'always-block';

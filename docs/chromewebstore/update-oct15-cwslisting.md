@@ -29,11 +29,11 @@ Create your own "Site Groups" such as News, Social Media, and Video, then organi
 🔞 Block adult & gambling list — switch on a bundled blocklist when you want those categories blocked by default. Blocks over 52k high-risk sites. Always Block for the sites you never want to open again, no timer required.
 🛡️ Tracker blocking — block trackers, send Global Privacy Control, and prefer encrypted connections, using public rulesets maintained by DuckDuckGo. All of it is optional and toggled from the same settings.
 ⏱️ Active Popup Timer to see how much time each group has left at a glance and manage your groups from the popup.
-📊 Time analytics — see time spent today and over the last 7 days for each group and for Allowed Sites. The record stays on this device for 90 days. Site icons on that tab come from Chrome's favicon cache.
+📊 Time analytics — see time spent today and over the last 7 days for each group and for Allowed Sites. The record stays on this device for 30 days. Site icons on that tab come from Chrome's favicon cache.
 
 **THE DIFFERENCE**
 
-📵 On your device only — no accounts, no remote analytics, no servers. Time records stay for 90 days and are deleted on uninstall
+📵 On your device only — no accounts, no remote analytics, no servers. Time records stay for 30 days and are deleted on uninstall
 🆓 100% free - all features are free, forever
 📖 Open source - Apache 2.0, audit every line on Github
 🔐 Privacy built in - the only focus tool that also blocks trackers
@@ -42,7 +42,7 @@ Create your own "Site Groups" such as News, Social Media, and Video, then organi
 
 OpenFocusd has no servers and no user accounts. Site lists, timers, settings, and time analytics are stored locally by Chrome.
 
-Time analytics records how long you spend on sites in your groups and on Allowed Sites: the hostname and the seconds for that day. The options page shows today and the last 7 days. Daily records are kept for 90 days, then older days are deleted. Deleting a site group deletes that group's time record immediately. Removing one site, or clearing Allowed Sites, leaves that host's past time in place until the 90-day window drops it or the group is deleted. Uninstalling the extension deletes the records with the rest of the local data.
+Time analytics records how long you spend on sites in your groups and on Allowed Sites: the hostname and the seconds for that day. The options page shows today and the last 7 days. Daily records are kept for 30 days, then older days are deleted. Deleting a site group deletes that group's time record immediately. Removing one site, or clearing Allowed Sites, leaves that host's past time in place until the 30-day window drops it or the group is deleted. Uninstalling the extension deletes the records with the rest of the local data.
 
 Optional tracker protection downloads public rulesets hosted by DuckDuckGo. Those downloads leave out your site lists, timers, and time records.
 

@@ -29,11 +29,11 @@ Crea tus propios «Grupos de sitios», como Noticias, Redes sociales y Vídeo, y
 🔞 Lista de sitios para adultos y de apuestas: activa una lista incluida cuando quieras bloquear esas categorías por defecto. Bloquea más de 52 000 sitios de alto riesgo. Always Block es para los sitios que no quieres volver a abrir, sin temporizador.
 🛡️ Bloqueo de rastreadores: bloquea rastreadores, envía la señal de Control Global de Privacidad y prefiere conexiones cifradas, con conjuntos de reglas públicos mantenidos por DuckDuckGo. Todo es opcional y se activa en los mismos ajustes.
 ⏱️ Temporizador activo en la ventana emergente para ver de un vistazo cuánto tiempo le queda a cada grupo y gestionar los grupos desde ahí.
-📊 Análisis de tiempo: consulta el tiempo usado hoy y en los últimos 7 días en cada grupo y en Sitios permitidos. El registro permanece en este dispositivo durante 90 días. Los iconos de sitio de esa pestaña salen de la caché de favicons de Chrome.
+📊 Análisis de tiempo: consulta el tiempo usado hoy y en los últimos 7 días en cada grupo y en Sitios permitidos. El registro permanece en este dispositivo durante 30 días. Los iconos de sitio de esa pestaña salen de la caché de favicons de Chrome.
 
 **LA DIFERENCIA**
 
-📵 Solo en tu dispositivo: sin cuentas, sin analítica remota, sin servidores. Los registros de tiempo se conservan 90 días y se eliminan al desinstalar
+📵 Solo en tu dispositivo: sin cuentas, sin analítica remota, sin servidores. Los registros de tiempo se conservan 30 días y se eliminan al desinstalar
 🆓 100 % gratis: todas las funciones son gratis, para siempre
 📖 Código abierto: Apache 2.0, revisa cada línea en GitHub
 🔐 Privacidad integrada: la única herramienta de concentración que también bloquea rastreadores
@@ -42,7 +42,7 @@ Crea tus propios «Grupos de sitios», como Noticias, Redes sociales y Vídeo, y
 
 OpenFocusd no tiene servidores ni cuentas de usuario. Las listas de sitios, los temporizadores, los ajustes y Análisis de tiempo se guardan localmente en Chrome.
 
-Análisis de tiempo registra cuánto tiempo pasas en los sitios de tus grupos y en Sitios permitidos: el nombre de host y los segundos de ese día. La página de opciones muestra hoy y los últimos 7 días. Los registros diarios se conservan 90 días y después se eliminan los días más antiguos. Eliminar un grupo de sitios borra de inmediato el registro de tiempo de ese grupo. Quitar un solo sitio, o vaciar Sitios permitidos, deja el tiempo pasado de ese host hasta que lo quite la ventana de 90 días o se elimine el grupo. Desinstalar la extensión borra los registros junto con el resto de los datos locales.
+Análisis de tiempo registra cuánto tiempo pasas en los sitios de tus grupos y en Sitios permitidos: el nombre de host y los segundos de ese día. La página de opciones muestra hoy y los últimos 7 días. Los registros diarios se conservan 30 días y después se eliminan los días más antiguos. Eliminar un grupo de sitios borra de inmediato el registro de tiempo de ese grupo. Quitar un solo sitio, o vaciar Sitios permitidos, deja el tiempo pasado de ese host hasta que lo quite la ventana de 30 días o se elimine el grupo. Desinstalar la extensión borra los registros junto con el resto de los datos locales.
 
 La protección opcional contra rastreadores descarga conjuntos de reglas públicos alojados por DuckDuckGo. Esas descargas no incluyen tus listas de sitios, temporizadores ni registros de tiempo.
 
