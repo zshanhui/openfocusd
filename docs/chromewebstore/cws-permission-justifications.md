@@ -12,162 +12,57 @@ For OpenFocusd. Each justification is tied to real, verifiable code paths in thi
 
 ## Permission justifications
 
-### alarms
-**Used for:** enforcing daily site-blocking limits that must survive service-worker restarts,
-and periodic refresh of remote protection lists.
+Each block under a heading is one store field. Paste the paragraph only. Every block is under 900 characters.
 
-The extension enforces per-group daily time allowances for blocked sites. Because Manifest V3
-service workers can be suspended at any time, the background script registers
-`chrome.alarms` timers to (a) reset each group's daily allowance at 6:00,
-(b) expire/re-check group timers, and (c) wake the worker when a blocked group's allowance runs
-out mid-session. See `ALARM_DAILY_RESET`, `ALARM_EXPIRY`, `ALARM_CHECKPOINT` in
-`shared/js/background/components/site-groups.js`. Alarms are also used to refresh the
-downloaded tracker/HTTPS rulesets on an interval (`shared/js/background/events.js`,
-`shared/js/background/components/resource-loader.js`). No user data is involved beyond
-local timers.
+### alarms
+
+Enforces daily site-blocking limits across service-worker restarts, and refreshes downloaded protection lists. Manifest V3 service workers can be suspended, so the background registers chrome.alarms to reset each group's allowance at 6:00, re-check group timers, and wake the worker when a blocked group's time runs out (ALARM_DAILY_RESET, ALARM_EXPIRY, ALARM_CHECKPOINT in shared/js/background/components/site-groups.js). Alarms also refresh tracker and HTTPS rulesets (shared/js/background/events.js, shared/js/background/components/resource-loader.js). Only local timers are involved.
 
 ### cookies
-**Used for:** closing a known gap in Manifest V3 cookie protection.
 
-Third-party tracking cookies are stripped by observing response headers with the `webRequest`
-API (see below), but in a few cases a `Set-Cookie` header can slip past the observation window.
-`chrome.cookies.remove()` is then used to delete exactly that cookie for the URL in question, so
-the user's browsing stays protected. See `validateSetCookieBlock` in
-`shared/js/background/events/3p-tracking-cookie-blocking.js`. The API is only used to remove
-cookies the extension was already blocking; cookies are never read for profiling, and nothing is
-transmitted anywhere.
+Closes a gap in Manifest V3 cookie protection. Third-party tracking cookies are stripped by observing response headers with webRequest. If a Set-Cookie header slips past that window, chrome.cookies.remove() deletes that cookie for the URL (validateSetCookieBlock in shared/js/background/events/3p-tracking-cookie-blocking.js). The API only removes cookies the extension was already blocking. Cookies are never read for profiling, and nothing is transmitted.
 
 ### declarativeNetRequest
-**Used for:** the actual blocking engine. In Manifest V3, network requests cannot be cancelled
-or redirected from `webRequest` observers, so the extension enforces all blocking with
-declarative rules:
 
-- **User site blocks** — every domain a user adds to a group/Always Block becomes a
-  `chrome.declarativeNetRequest` dynamic rule that redirects that site to the in-extension
-  blocked page (`shared/js/background/dnr-user-blocklist.js`).
-- **Allowed Sites overrides** — user-allowed patterns create `allowAllRequests`-style rules
-  that exempt those sites (`shared/js/background/dnr-user-allowlist.js`).
-- **Bundled category rulesets** — the optional adult & gambling blocklist and the HTTPS-upgrade
-  (Smarter Encryption) ruleset are shipped as rule resources in the manifest and applied on
-  demand (`dnr-category-blocklist.js`, `dnr-smarter-encryption.js`).
-- **Privacy rules** — Global Privacy Control header injection via DNR
-  (`shared/js/background/dnr-gpc.js`), and Sanctuary Mode enforcement
-  (`shared/js/background/dnr-sanctuary.js`).
-
-Rule matching happens locally in the browser; no request data leaves the device.
+The blocking engine. Manifest V3 cannot cancel or redirect requests from webRequest, so blocking uses declarative rules matched locally. No request data leaves the device. Each domain added to a group or Always Block becomes a dynamic rule that redirects the site to the in-extension blocked page (shared/js/background/dnr-user-blocklist.js). Allowed Sites create allow rules that exempt those sites (dnr-user-allowlist.js). The optional adult and gambling list and the HTTPS-upgrade ruleset are manifest rule resources, applied on demand (dnr-category-blocklist.js, dnr-smarter-encryption.js). Global Privacy Control is injected with dnr-gpc.js. Sanctuary Mode is enforced with dnr-sanctuary.js.
 
 ### favicon
-**Used for:** site icons on the Time analytics tab only.
 
-The options page shows a 16px icon beside each host in Time analytics. The icon is loaded from
-Chrome's favicon cache through the extension URL `/_favicon/?pageUrl=…&size=32`. See
-`faviconURL` in `shared/js/ui/templates/time-analytics.js`. The page address is handed to Chrome
-so it can look up an icon it already has. It is not sent to OpenFocusd, and the extension does
-not call a third-party favicon host. Firefox builds omit the icon because `/_favicon/` is
-Chrome-only.
+Site icons on the Time analytics tab only. The options page shows a 16px icon beside each host, loaded from Chrome's favicon cache via /_favicon/?pageUrl=…&size=32 (faviconURL in shared/js/ui/templates/time-analytics.js). The page address is given to Chrome so it can look up an icon it already has. It is not sent to OpenFocusd, and the extension does not call a third-party favicon host. Firefox builds omit the icon because /_favicon/ is Chrome-only.
 
-### host permission use (`*://*/*`)
-**Used for:** applying user-configured blocking to *any* domain the user chooses.
+### host permission (`*://*/*`)
 
-Because the whole point of the product is that *the user* decides which sites to block, the
-rules cannot be limited to a fixed host list — a dynamic rule/`<all_urls>` match is required so
-that whatever site the user adds to a group is blocked, and so the extension can read the URL of
-the current page to show correct group/timer status and the blocking page. The same broad match
-covers the registered content scripts (below) and the `webRequest`/`webNavigation` observers.
-URLs are processed locally to decide blocking and to add up time. Page content is not read.
-For sites the user puts in a group or in Allowed Sites, the hostname and the seconds spent that
-day are stored on the device for the timer and Time analytics. Nothing is transmitted.
+Applies user-configured blocking to any domain the user chooses, and counts time on those sites. The user picks the sites, so rules cannot be limited to a fixed host list. A dynamic rule and <all_urls> match is required so any site added to a group is blocked, and so the extension can read the current page URL to show group and timer status and the blocking page. The same match covers the content scripts and the webRequest and webNavigation observers. URLs are processed locally to decide blocking and to add up time. Page content is not read. For a site in a group or in Allowed Sites, the hostname and the seconds spent that day are stored on the device. Nothing is transmitted.
 
-### remote code use
-**No remote code is executed.** All JavaScript is bundled into the extension and shipped inside
-the package; the manifest content security policy is `script-src 'self'; object-src 'self'`
-(`browsers/chrome/manifest.json`), which forbids remote scripts. The only network activity is
-downloads of *data files* (tracker rulesets/configuration from `staticcdn.duckduckgo.com`), which
-are parsed as JSON and never executed as code. If the dashboard asks whether the product uses
-remote code, answer **No** and paste: "All code is bundled locally with the extension. Only data
-files (JSON rulesets) are downloaded and parsed; no remote code is ever executed, as enforced by
-the manifest's `script-src 'self'` CSP."
+### remote code
+
+No remote code is executed. All JavaScript is bundled in the package. The manifest content security policy is script-src 'self'; object-src 'self' (browsers/chrome/manifest.json), which forbids remote scripts. The only network activity is downloads of data files: tracker rulesets and configuration from staticcdn.duckduckgo.com. Those files are parsed as JSON and are never executed as code.
 
 ### scripting
-**Used for:** registering the extension's content scripts, which Manifest V3 requires via
-`chrome.scripting`.
 
-At startup the background script registers two content scripts that run on page load
-(`shared/js/background/components/mv3-content-script-injection.js`): a small isolated-world
-messaging helper and the bundled protection script (`public/js/inject.js`), injected at
-`document_start` in all frames, which applies the extension's on-page privacy protections
-(tracker/cookie protection) under the remote configuration. The same API registers the YouTube
-sanitizer: four bundled CSS files plus a small class-toggle script, matched only to YouTube,
-also at `document_start` (`shared/js/background/components/sanitize-youtube.js`). Those styles
-hide comments, recommendations, and Shorts, and blur thumbnails, when the user turns the
-matching setting on. `chrome.scripting.executeScript` is also used for user-triggered
-cookie-banner actions (`shared/js/background/components/cookie-prompt-management.js`) and to
-apply the YouTube classes on tabs that are already open. Scripts and CSS are first-party,
-bundled, and versioned with the extension. They do not skip video ads.
+Registers content scripts, which Manifest V3 does through chrome.scripting. At startup the background registers a small messaging helper and the bundled protection script public/js/inject.js, both at document_start in all frames, for on-page tracker and cookie protection (shared/js/background/components/mv3-content-script-injection.js). The same API registers the YouTube sanitizer: four bundled CSS files plus a small class-toggle script, matched only to YouTube, also at document_start (shared/js/background/components/sanitize-youtube.js). Those styles hide comments, recommendations, and Shorts, and blur thumbnails, when the matching setting is on. chrome.scripting.executeScript also runs user-triggered cookie-banner actions and applies YouTube classes on tabs already open. Scripts and CSS ship with the extension. They do not skip video ads.
 
 ### storage
-**Used for:** persisting the product's local state.
 
-`chrome.storage.local` stores the user's own data: site groups, Allowed Sites, settings
-(language, optional privacy toggles, YouTube sanitizer switches), and time records. Time
-records are `groupUsage` and `allowedSiteUsage` (`shared/js/background/site-groups-store.js`,
-`shared/js/background/allowed-sites-store.js`). Each finished day keeps the hostname and the
-seconds spent. `USAGE_HISTORY_DAYS` in `shared/js/shared-utils/site-groups.js` is 30: older
-days are deleted when the focus day rolls. The options page shows today and the last 7 days
-of that store. Deleting a site group deletes that group's record immediately. Removing one
-site, or clearing Allowed Sites, leaves that host's past time until the 30-day window drops
-it or the group is deleted. Uninstalling the extension deletes the local store.
-`chrome.storage.session` holds ephemeral state that should not survive a worker restart. See
-`shared/js/background/settings.js` and `shared/js/background/wrapper.js`. There is no
-`storage.sync` and nothing is uploaded. Cached tracker and HTTPS rulesets are also kept
-locally.
+Persists local state. Nothing is uploaded, and there is no storage.sync. chrome.storage.local stores site groups, Allowed Sites, settings (language, privacy toggles, YouTube switches), and time records groupUsage and allowedSiteUsage (site-groups-store.js, allowed-sites-store.js). Each finished day keeps the hostname and the seconds spent. USAGE_HISTORY_DAYS in shared/js/shared-utils/site-groups.js is 30; older days are deleted when the focus day rolls. The options page shows today and the last 7 days. Deleting a site group deletes that group's record immediately. Removing one site, or clearing Allowed Sites, leaves that host's past time until the 30-day window drops it or the group is deleted. Uninstall deletes the local store. chrome.storage.session holds ephemeral state. Cached tracker and HTTPS rulesets stay on the device.
 
 ### tabs
-**Used for:** knowing which site is active so the extension can show the right state and act
-only where the user is looking.
 
-The extension tracks open tabs (URL/state) to (a) update the toolbar icon and popup with the
-correct group/timer status for the current site, (b) answer popup queries about the active tab,
-and (c) keep per-tab state in sync as pages load. See `shared/js/background/tab-manager.js` and
-`shared/js/background/components/tab-tracking.js`. Tab URLs are used locally to decide
-blocking, to show status, and to count time for the active site. They are never sent anywhere.
+Knows which site is active so the extension can show the right state for the tab the user is viewing. Open tabs are tracked to update the toolbar icon and popup with that site's group and timer, answer popup queries about the active tab, and keep per-tab state in sync as pages load (shared/js/background/tab-manager.js, shared/js/background/components/tab-tracking.js). Tab URLs are used locally to decide blocking, show status, and count time. They are never sent anywhere.
 
 ### webNavigation
-**Used for:** reacting to navigations, which is how blocking is made visible and time is counted.
 
-The extension listens to `webNavigation` events (`onCommitted`, `onBeforeNavigate`,
-`onCompleted`, `onErrorOccurred`) so that (a) navigations to a site in a blocked group are
-recognised and the daily timer is updated/counted correctly,
-(b) the blocking/status UI stays accurate across SPA navigations, and (c) the action icon is
-kept current per tab. See `shared/js/background/events.js` and
-`shared/js/background/components/site-groups.js` / `sanctuary.js`. Navigation events are
-processed locally only.
+Reacts to navigations so blocking stays visible and time is counted. The extension listens to webNavigation (onCommitted, onBeforeNavigate, onCompleted, onErrorOccurred) so a navigation into a blocked group updates the daily timer, the blocking and status UI stays accurate across in-page navigations, and the action icon stays current per tab (shared/js/background/events.js, site-groups.js, sanctuary.js). Navigation events are processed locally only.
 
 ### webRequest
-**Used for:** the cookie-protection feature, which cannot be expressed purely as static DNR
-rules.
 
-In Manifest V3 the extension observes `onHeadersReceived`/`onBeforeSendHeaders` (non-blocking,
-with `extraHeaders`) to strip `Set-Cookie` / `Cookie` headers on third-party tracking requests,
-and correlates with DNR to close protection gaps. See
-`shared/js/background/events/3p-tracking-cookie-blocking.js` and the listener registrations in
-`shared/js/background/events.js`. Headers are inspected locally to decide whether a request is a
-tracker using the bundled rulesets; nothing is transmitted.
+Cookie protection, which cannot be expressed as static declarativeNetRequest rules alone. The extension observes onHeadersReceived and onBeforeSendHeaders (non-blocking, with extraHeaders) to strip Set-Cookie and Cookie headers on third-party tracking requests, and correlates with declarativeNetRequest to close protection gaps (shared/js/background/events/3p-tracking-cookie-blocking.js, listeners in shared/js/background/events.js). Headers are inspected locally, using the bundled rulesets, to decide whether a request is a tracker. Nothing is transmitted.
 
 ---
 
 ## Single purpose description
 
-> OpenFocusd is a focus tool. Its single purpose is to help users stop wasting time by blocking
-> distracting websites on a daily timer: sites are organised into user-defined groups with a
-> shared daily allowance, an "Always Block" group for sites the user never wants to visit again,
-> "Allowed Sites" that stay reachable even inside blocked groups, and Sanctuary Mode that locks
-> the browser to only Allowed Sites for a chosen period. Time analytics shows that same on-device
-> time for today and the last 7 days. The optional YouTube sanitizer hides comments,
-> recommendations, and Shorts and blurs thumbnails on YouTube. The optional privacy protections
-> (tracker blocking, Global Privacy Control, HTTPS upgrading) are supporting features of the same
-> product and are controlled from the same settings; they exist to make focused browsing safer
-> and do not constitute a separate purpose.
+OpenFocusd is a focus tool. Its single purpose is to help users stop wasting time by blocking distracting websites on a daily timer. Sites go into user-defined groups with a shared daily allowance, an Always Block group for sites the user never wants to open again, and Allowed Sites that stay reachable. Sanctuary Mode locks the browser to only Allowed Sites for a chosen period. Time analytics shows that same on-device time for today and the last 7 days. The optional YouTube sanitizer hides comments, recommendations, and Shorts and blurs thumbnails. Optional tracker blocking, Global Privacy Control, and HTTPS upgrading are supporting features of the same product, controlled from the same settings.
 
 ---
 
