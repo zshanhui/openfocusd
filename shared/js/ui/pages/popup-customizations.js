@@ -23,6 +23,21 @@ function getTabId() {
     return Number.isFinite(value) && value > 0 ? value : undefined;
 }
 
+// Firefox's chrome.runtime.sendMessage does not return a Promise unless a
+// callback is passed. Chrome accepts the same callback form.
+function sendExtensionMessage(message) {
+    return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage(message, (response) => {
+            const runtimeError = chrome.runtime.lastError;
+            if (runtimeError) {
+                reject(new Error(runtimeError.message));
+                return;
+            }
+            resolve(response);
+        });
+    });
+}
+
 function el(tag, className, text) {
     const node = document.createElement(tag);
     if (className) {
@@ -71,11 +86,10 @@ function applySearchEngine(page, search) {
 function refreshSearchEngine(page, search) {
     applySearchEngine(page, search);
     if (!searchEngineRequest) {
-        searchEngineRequest = chrome.runtime
-            .sendMessage({
-                messageType: 'getSetting',
-                options: { name: 'searchEngine' },
-            })
+        searchEngineRequest = sendExtensionMessage({
+            messageType: 'getSetting',
+            options: { name: 'searchEngine' },
+        })
             .then((value) => {
                 searchEngine = normalizeSearchEngine(value);
             })
@@ -190,14 +204,17 @@ function tickRemaining(card) {
 
 async function refreshStatus(card) {
     try {
-        const status = await chrome.runtime.sendMessage({
+        const status = await sendExtensionMessage({
             messageType: 'getPopupGroupStatus',
             options: { tabId: getTabId() },
         });
         card._status = status;
         renderStatus(card, status);
-    } catch {
-        // Firefox and older builds may not have the groups handler.
+    } catch (error) {
+        console.warn('Failed to load group status', error);
+        if (!card._status) {
+            renderStatus(card, null);
+        }
     }
 }
 
@@ -293,7 +310,7 @@ function showSanctuaryDialog(card, state) {
 
 async function activateSanctuary(card) {
     try {
-        const state = await chrome.runtime.sendMessage({ messageType: 'activateSanctuary' });
+        const state = await sendExtensionMessage({ messageType: 'activateSanctuary' });
         card._sanctuary = state;
         renderSanctuary(card, state);
     } catch (error) {
@@ -345,7 +362,7 @@ function tickSanctuary(card) {
 
 async function refreshSanctuary(card) {
     try {
-        const state = await chrome.runtime.sendMessage({ messageType: 'getSanctuaryState' });
+        const state = await sendExtensionMessage({ messageType: 'getSanctuaryState' });
         card._sanctuary = state;
         if (card.querySelector('.openfocusd-sanctuary__dialog') && !state?.active) {
             return;

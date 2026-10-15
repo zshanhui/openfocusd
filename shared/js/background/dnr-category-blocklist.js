@@ -17,6 +17,7 @@ import {
 } from './dnr-utils';
 import settings from './settings';
 import { getExtensionURL, getManifestVersion } from './wrapper';
+import { setCategoryPolicy } from './focus-block-policy';
 
 const CATEGORY_RULES_PATH = 'data/bundled/adult-gambling-rules.json';
 const MAIN_FRAME_RESOURCE_TYPE = 'main_frame';
@@ -54,6 +55,8 @@ export function isAdultGamblingBlockEnabled() {
 export async function refreshAdultGamblingRuleset() {
     await settings.ready();
     const enabled = isAdultGamblingBlockEnabled();
+    // Manifest V2 has no static rulesets. refreshCategoryAllowRules updates the
+    // webRequest policy instead.
     if (!supportsCategoryDnr()) {
         return enabled;
     }
@@ -154,6 +157,21 @@ export async function shouldRedirectCategoryNavigation(url) {
  * @returns {Promise<chrome.declarativeNetRequest.Rule[]>}
  */
 export async function refreshCategoryAllowRules(patterns) {
+    if (getManifestVersion() === 2) {
+        await settings.ready();
+        const enabled = isAdultGamblingBlockEnabled();
+        const allowPatterns = patterns ?? getAllowedSites();
+        if (!enabled) {
+            categoryDomainSet = null;
+            setCategoryPolicy(false);
+            return [];
+        }
+        const bundledRules = await loadBundledCategoryRules();
+        categoryDomainSet = domainSetFromRules(bundledRules);
+        setCategoryPolicy(true, categoryDomainSet, allowPatterns);
+        return [];
+    }
+
     if (!supportsCategoryDnr()) {
         return [];
     }

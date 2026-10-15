@@ -1,4 +1,3 @@
-/* global BUILD_TARGET */
 const Parent = window.DDG.base.Page;
 const mixins = require('./mixins/index.js');
 const PrivacyOptionsView = require('./../views/privacy-options.js');
@@ -13,8 +12,15 @@ const siteGroupsTemplate = require('./../templates/site-groups.js');
 const AllowedSitesView = require('./../views/allowed-sites.js');
 const AllowedSitesModel = require('./../models/allowed-sites.js');
 const allowedSitesTemplate = require('./../templates/allowed-sites.js');
+const SanitizeYoutubeView = require('./../views/sanitize-youtube.js');
+const SanitizeYoutubeModel = require('./../models/sanitize-youtube.js');
+const sanitizeYoutubeTemplate = require('./../templates/sanitize-youtube.js');
+const TimeAnalyticsView = require('./../views/time-analytics.js');
+const TimeAnalyticsModel = require('./../models/time-analytics.js');
+const timeAnalyticsTemplate = require('./../templates/time-analytics.js');
 const BackgroundMessageModel = require('./../models/background-message.js');
 const InternalOptionsView = require('./../views/internal-options.js').default;
+const browser = require('webextension-polyfill');
 const { sendMessage } = require('./../base/ui-wrapper.js');
 const { getUserLocale, setStoredUiLocale, UI_LOCALES } = require('../../background/i18n.js');
 const t = window.DDG.base.i18n.t;
@@ -30,6 +36,8 @@ Options.prototype = window.$.extend({}, Parent.prototype, mixins.setBrowserClass
         const $siteGroupsParent = window.$('#blocked-sites-content');
         const $allowedSitesParent = window.$('#allowed-sites-content');
         const $blockTrackersParent = window.$('#block-trackers-content');
+        const $sanitizeYoutubeParent = window.$('#sanitize-youtube-content');
+        const $timeAnalyticsParent = window.$('#time-analytics-content');
         Parent.prototype.ready.call(this);
 
         this.setBrowserClassOnBodyTag();
@@ -42,6 +50,7 @@ Options.prototype = window.$.extend({}, Parent.prototype, mixins.setBrowserClass
         });
 
         this._setupLanguageSwitcher();
+        this._setupVersion();
         this._setupTabs();
 
         this.views.options = new PrivacyOptionsView({
@@ -58,21 +67,33 @@ Options.prototype = window.$.extend({}, Parent.prototype, mixins.setBrowserClass
             template: allowlistTemplate,
         });
 
-        if (BUILD_TARGET === 'chrome') {
-            this.views.siteGroups = new SiteGroupsView({
-                pageView: this,
-                model: new SiteGroupsModel({}),
-                appendTo: $siteGroupsParent,
-                template: siteGroupsTemplate,
-            });
+        this.views.siteGroups = new SiteGroupsView({
+            pageView: this,
+            model: new SiteGroupsModel({}),
+            appendTo: $siteGroupsParent,
+            template: siteGroupsTemplate,
+        });
 
-            this.views.allowedSites = new AllowedSitesView({
-                pageView: this,
-                model: new AllowedSitesModel({}),
-                appendTo: $allowedSitesParent,
-                template: allowedSitesTemplate,
-            });
-        }
+        this.views.allowedSites = new AllowedSitesView({
+            pageView: this,
+            model: new AllowedSitesModel({}),
+            appendTo: $allowedSitesParent,
+            template: allowedSitesTemplate,
+        });
+
+        this.views.sanitizeYoutube = new SanitizeYoutubeView({
+            pageView: this,
+            model: new SanitizeYoutubeModel({}),
+            appendTo: $sanitizeYoutubeParent,
+            template: sanitizeYoutubeTemplate,
+        });
+
+        this.views.timeAnalytics = new TimeAnalyticsView({
+            pageView: this,
+            model: new TimeAnalyticsModel({}),
+            appendTo: $timeAnalyticsParent,
+            template: timeAnalyticsTemplate,
+        });
 
         this.views.internal = new InternalOptionsView({
             pageView: this,
@@ -109,6 +130,14 @@ Options.prototype = window.$.extend({}, Parent.prototype, mixins.setBrowserClass
             sendMessage('updateSetting', { name: 'uiLocale', value: select.value });
             window.location.reload();
         });
+    },
+
+    _setupVersion: function () {
+        const versionEl = document.querySelector('.js-options-version');
+        if (!versionEl || typeof browser.runtime?.getManifest !== 'function') {
+            return;
+        }
+        versionEl.textContent = browser.runtime.getManifest().version;
     },
 
     _setupTabs: function () {

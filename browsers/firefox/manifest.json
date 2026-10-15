@@ -3,12 +3,12 @@
     "applications": {
         "gecko": {
             "id": "jid1-ZAdIEUB7XOzOJw@jetpack",
-            "strict_min_version": "102.0"
+            "strict_min_version": "128.0"
         }
     },
     "homepage_url": "https://zshanhui.github.io/openfocusd/",
     "default_locale": "en",
-    "version": "2026.9.2",
+    "version": "2026.10.15",
     "description": "Privacy, simplified. Protect your data as you search and browse: tracker blocking, smarter encryption, private search, and more.",
     "icons": {
         "16": "img/icon_16.png",
@@ -57,6 +57,22 @@
                 "public/js/inject.js"
             ],
             "run_at": "document_start"
+        },
+        {
+            "matches": [
+                "*://*.youtube.com/*",
+                "*://youtube.com/*"
+            ],
+            "js": [
+                "public/js/content-scripts/youtube-sanitize.js"
+            ],
+            "css": [
+                "data/youtube-sanitize/comments.css",
+                "data/youtube-sanitize/related.css",
+                "data/youtube-sanitize/shorts.css",
+                "data/youtube-sanitize/thumbnails.css"
+            ],
+            "run_at": "document_start"
         }
     ],
     "options_ui": {
@@ -74,6 +90,7 @@
     ],
     "web_accessible_resources": [
         "/web_accessible_resources/*",
-        "/public/font/*"
+        "/public/font/*",
+        "/html/blocked.html"
     ]
 }

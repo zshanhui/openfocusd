@@ -39,6 +39,8 @@ test.describe('Test privacy dashboard', () => {
         await expect(chromeBar).toBeVisible();
         await expect(websiteTab).toHaveAttribute('aria-selected', 'true');
         await expect(groupStatus).toBeVisible();
+        await expect(groupStatus).toContainText('You are currently on');
+        await expect(groupStatus).toContainText('Group');
         await expect(optionsBar.locator('.cog-button')).toBeVisible();
         await expect(search).toBeHidden();
 

@@ -7,6 +7,9 @@ import {
     SANCTUARY_BLOCK_MAIN_RULE_ID,
     SANCTUARY_BLOCK_SUBRESOURCE_RULE_ID,
 } from './dnr-utils';
+import { getManifestVersion } from './wrapper';
+import { setSanctuaryPolicy } from './focus-block-policy';
+import { getSanctuarySettings } from './sanctuary-store';
 
 const BLOCKED_SITE_PAGE_PATH = '/html/blocked.html';
 const MAIN_FRAME_RESOURCE_TYPE = 'main_frame';
@@ -101,6 +104,14 @@ async function buildAllowRules(patterns) {
  * @returns {Promise<string[]>}
  */
 export async function refreshSanctuaryRules(patterns) {
+    // Firefox enforces sanctuary in the webRequest listener. Keep Chrome on
+    // declarativeNetRequest.
+    if (getManifestVersion() === 2) {
+        const { endsAt } = getSanctuarySettings();
+        setSanctuaryPolicy(true, patterns, endsAt);
+        return patterns;
+    }
+
     const addRules = [];
 
     if (await regexSupported(CATCH_ALL_REGEX)) {
@@ -128,6 +139,11 @@ export async function refreshSanctuaryRules(patterns) {
 }
 
 export async function clearSanctuaryRules() {
+    if (getManifestVersion() === 2) {
+        setSanctuaryPolicy(false);
+        return;
+    }
+
     await chrome.declarativeNetRequest.updateDynamicRules({
         removeRuleIds: sanctuaryRuleIds(),
         addRules: [],
