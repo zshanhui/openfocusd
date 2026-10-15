@@ -20,6 +20,7 @@ const TimeAnalyticsModel = require('./../models/time-analytics.js');
 const timeAnalyticsTemplate = require('./../templates/time-analytics.js');
 const BackgroundMessageModel = require('./../models/background-message.js');
 const InternalOptionsView = require('./../views/internal-options.js').default;
+const browser = require('webextension-polyfill');
 const { sendMessage } = require('./../base/ui-wrapper.js');
 const { getUserLocale, setStoredUiLocale, UI_LOCALES } = require('../../background/i18n.js');
 const t = window.DDG.base.i18n.t;
@@ -49,6 +50,7 @@ Options.prototype = window.$.extend({}, Parent.prototype, mixins.setBrowserClass
         });
 
         this._setupLanguageSwitcher();
+        this._setupVersion();
         this._setupTabs();
 
         this.views.options = new PrivacyOptionsView({
@@ -128,6 +130,14 @@ Options.prototype = window.$.extend({}, Parent.prototype, mixins.setBrowserClass
             sendMessage('updateSetting', { name: 'uiLocale', value: select.value });
             window.location.reload();
         });
+    },
+
+    _setupVersion: function () {
+        const versionEl = document.querySelector('.js-options-version');
+        if (!versionEl || typeof browser.runtime?.getManifest !== 'function') {
+            return;
+        }
+        versionEl.textContent = browser.runtime.getManifest().version;
     },
 
     _setupTabs: function () {

@@ -239,6 +239,12 @@ export class TrackerBlockedEvent {
  * @returns {browser.WebRequest.BlockingResponseOrPromise | undefined}
  */
 function blockHandleResponse(thisTab, requestData) {
+    // webRequest can fire before the tracker lists are applied. Classifying
+    // then throws, and the request is left alone either way.
+    if (!trackers.entityList || !trackers.trackerList) {
+        return;
+    }
+
     const blockingEnabled = thisTab.site.isContentBlockingEnabled();
 
     const tracker = trackers.getTrackerData(requestData.url, thisTab.site.url, requestData);

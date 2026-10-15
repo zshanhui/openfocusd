@@ -46,6 +46,27 @@ describe('Request Blocklist:', () => {
         return tds.setLists(testLists);
     });
 
+    it('does not throw when tracker lists are not loaded yet', () => {
+        const savedEntityList = tds.entityList;
+        const savedTrackerList = tds.trackerList;
+        tds.entityList = null;
+        tds.trackerList = null;
+        try {
+            expect(
+                blockHandleResponse(
+                    {},
+                    {
+                        url: 'https://doubleclick.net/ad.js',
+                        type: 'script',
+                    },
+                ),
+            ).toBeUndefined();
+        } finally {
+            tds.entityList = savedEntityList;
+            tds.trackerList = savedTrackerList;
+        }
+    });
+
     const tabId = 1;
     for (const testSet of Object.values(tests)) {
         describe(testSet.desc + ':', () => {

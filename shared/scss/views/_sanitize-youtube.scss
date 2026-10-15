@@ -20,7 +20,9 @@
 }
 
 .options-content__sanitize-youtube .toggle-button {
-    position: static;
+    position: relative;
+    right: auto;
+    left: auto;
     flex: 0 0 auto;
 }
 
@@ -29,5 +31,5 @@
     margin-bottom: 12px;
     color: vars.$grey-dark;
     font-weight: normal;
-    text-align: left;
+    text-align: start;
 }

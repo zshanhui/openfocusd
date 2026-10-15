@@ -3,7 +3,7 @@
 Draft prepared from `docs/` copy and the actual product behavior (site groups, Allowed Sites,
 Sanctuary Mode, optional tracker protection). Everything below is written to be honest about
 what the extension does and to survive review. **Remember to bump the manifest version before
-each upload** (current: `2026.9.2`).
+each upload** (current: `2026.10.15`).
 
 ---
 
@@ -64,6 +64,9 @@ Backup (104 chars):
 >
 > • **Clear blocked page & popup timer** — see how much time each group has left at a glance
 >   and manage your groups from the popup.
+>
+> • **Time analytics** — see time spent today and over the last 7 days, for sites in your
+>   groups and for Allowed Sites. The record stays on this device.
 >
 > • **Optional adult & gambling list** — switch on a bundled blocklist when you want those
 >   categories blocked by default. Allowed Sites can still make an exception.

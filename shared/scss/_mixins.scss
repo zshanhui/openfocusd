@@ -56,6 +56,8 @@
         padding: 0;
         border: none;
         background-color: transparent;
+        // Keep the knob's off/on travel physical. The control itself moves below.
+        direction: ltr;
         text-align: left;
 
         .toggle-button__bg {
@@ -98,6 +100,12 @@
                 background-color: vars.$color--green;
             }
         }
+    }
+
+    // Arabic reads from the right, so the switch sits at the end of the row.
+    [dir='rtl'] .toggle-button {
+        right: auto;
+        left: 14px;
     }
 }
 
